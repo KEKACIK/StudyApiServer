@@ -1,17 +1,18 @@
 package main
 
 import (
-	"fmt"
-	"net/http"
+	"github.com/gin-gonic/gin"
 )
 
 func main() {
-	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, "Hello World")
-	})
-	http.HandleFunc("/echo", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Fprintf(w, r.URL.Query().Get("message"))
-	})
+	memoryStorage := NewMemoryStorage()
+	handler := NewHandler(memoryStorage)
 
-	http.ListenAndServe(":80", nil)
+	router := gin.Default()
+	router.POST("/student", handler.CreateStudent)
+	//router.GET("/student/:id")
+	////router.PUT("/student/:id")
+	////router.DELETE("/student/:id")
+
+	router.Run(":80")
 }

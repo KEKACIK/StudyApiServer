@@ -1,0 +1,54 @@
+package main
+
+import (
+	"fmt"
+	"sync"
+)
+
+type Student struct {
+	ID     int
+	Name   string
+	Sex    string
+	Age    int
+	Course int
+}
+
+type Storage interface {
+	Insert(s *Student)
+	Get(id int) (Student, error)
+	Update(id int, s Student)
+	Delete(id int)
+	Print()
+}
+type MemoryStorage struct {
+	counter int
+	data    map[int]Student
+	sync.Mutex
+}
+
+func NewMemoryStorage() *MemoryStorage {
+	return &MemoryStorage{
+		data:    make(map[int]Student),
+		counter: 1,
+	}
+}
+
+func (st *MemoryStorage) Insert(s *Student) {
+	st.Lock()
+	s.ID = st.counter
+	st.data[s.ID] = *s
+	st.counter++
+	st.Unlock()
+}
+func (st *MemoryStorage) Get(id int) (Student, error) {
+	return Student{}, nil
+}
+func (st *MemoryStorage) Update(id int, e Student) {
+
+}
+func (st *MemoryStorage) Delete(id int) {
+
+}
+func (st *MemoryStorage) Print() {
+	fmt.Println(st.data)
+}
