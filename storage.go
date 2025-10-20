@@ -16,6 +16,7 @@ type Student struct {
 type Storage interface {
 	Insert(s *Student)
 	Get(id int) (Student, error)
+	GetAll() map[int]Student
 	Update(id int, s Student)
 	Delete(id int)
 	Print()
@@ -41,13 +42,21 @@ func (st *MemoryStorage) Insert(s *Student) {
 	st.Unlock()
 }
 func (st *MemoryStorage) Get(id int) (Student, error) {
-	return Student{}, nil
+	student, exists := st.data[id]
+	if !exists {
+		return Student{}, fmt.Errorf("student id=%d not found", id)
+	}
+	return student, nil
 }
+func (st *MemoryStorage) GetAll() map[int]Student {
+	return st.data
+}
+
 func (st *MemoryStorage) Update(id int, e Student) {
 
 }
 func (st *MemoryStorage) Delete(id int) {
-
+	delete(st.data, id)
 }
 func (st *MemoryStorage) Print() {
 	fmt.Println(st.data)
