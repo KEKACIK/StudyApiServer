@@ -17,7 +17,7 @@ type Storage interface {
 	Insert(s *Student)
 	Get(id int) (Student, error)
 	GetAll() map[int]Student
-	Update(id int, s Student)
+	Update(id int, s *Student)
 	Delete(id int)
 	Print()
 }
@@ -52,8 +52,10 @@ func (st *MemoryStorage) GetAll() map[int]Student {
 	return st.data
 }
 
-func (st *MemoryStorage) Update(id int, e Student) {
-
+func (st *MemoryStorage) Update(id int, s *Student) {
+	st.Lock()
+	st.data[id] = *s
+	st.Unlock()
 }
 func (st *MemoryStorage) Delete(id int) {
 	delete(st.data, id)

@@ -2,9 +2,10 @@ package main
 
 import (
 	"fmt"
-	"github.com/gin-gonic/gin"
 	"net/http"
 	"strconv"
+
+	"github.com/gin-gonic/gin"
 )
 
 type ErrorResponse struct {
@@ -78,6 +79,43 @@ func (h *Handler) GetStudent(c *gin.Context) {
 func (h *Handler) GetAllStudent(c *gin.Context) {
 	studentList := h.storage.GetAll()
 	c.JSON(http.StatusOK, studentList)
+}
+
+func (h *Handler) UpdateStudent(c *gin.Context) {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, ErrorResponse{
+			Message: err.Error(),
+		})
+	}
+	student, err := h.storage.Get(id)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, ErrorResponse{
+			Message: err.Error(),
+		})
+	}
+	var newStudent Student
+	if err := c.BindJSON(&newStudent); err != nil {
+		fmt.Printf("failed to bind student: %s\n", err.Error())
+		c.JSON(http.StatusBadRequest, ErrorResponse{
+			Message: err.Error(),
+		})
+		return
+	}
+	if newStudent.Name != "" {
+		student.Name = newStudent.Name
+	}
+	if student.Age != 0 {
+		student.Age = newStudent.Age
+	}
+	if student.Sex == "Man" || student.Sex == "Woman" {
+		student.Sex = newStudent.Sex
+	}
+	if student.Course > 1 && student.Course < 6 {
+		student.Course = newStudent.Course
+	}
+	h.storage.Update(id, &student)
+	c.JSON(http.StatusOK, student)
 }
 
 func (h *Handler) DeleteStudent(c *gin.Context) {
