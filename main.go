@@ -1,12 +1,17 @@
 package main
 
 import (
+	"StudyApiServer/storage"
+
 	"github.com/gin-gonic/gin"
 )
 
 func main() {
-	memoryStorage := NewMemoryStorage()
-	handler := NewHandler(memoryStorage)
+	sqliteStorage, err := storage.NewSQLiteStorage("database.db")
+	if err != nil {
+		panic(err)
+	}
+	handler := NewHandler(sqliteStorage)
 
 	router := gin.Default()
 	router.POST("/student", handler.CreateStudent)

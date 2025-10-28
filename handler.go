@@ -1,6 +1,7 @@
 package main
 
 import (
+	"StudyApiServer/storage"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -13,15 +14,15 @@ type ErrorResponse struct {
 }
 
 type Handler struct {
-	storage Storage
+	storage storage.Storage
 }
 
-func NewHandler(storage Storage) *Handler {
+func NewHandler(storage storage.Storage) *Handler {
 	return &Handler{storage}
 }
 
 func (h *Handler) CreateStudent(c *gin.Context) {
-	var student Student
+	var student storage.Student
 	if err := c.BindJSON(&student); err != nil {
 		fmt.Printf("failed to bind student: %s\n", err.Error())
 		c.JSON(http.StatusBadRequest, ErrorResponse{
@@ -54,7 +55,12 @@ func (h *Handler) CreateStudent(c *gin.Context) {
 		return
 	}
 
-	h.storage.Insert(&student)
+	err := h.storage.Insert(&student)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, ErrorResponse{
+			Message: err.Error(),
+		})
+	}
 	c.JSON(http.StatusOK, map[string]interface{}{
 		"id": student.ID,
 	})
@@ -77,7 +83,12 @@ func (h *Handler) GetStudent(c *gin.Context) {
 }
 
 func (h *Handler) GetAllStudent(c *gin.Context) {
-	studentList := h.storage.GetAll()
+	studentList, err := h.storage.GetAll()
+	if err != nil {
+		c.JSON(http.StatusBadRequest, ErrorResponse{
+			Message: err.Error(),
+		})
+	}
 	c.JSON(http.StatusOK, studentList)
 }
 
@@ -94,7 +105,7 @@ func (h *Handler) UpdateStudent(c *gin.Context) {
 			Message: err.Error(),
 		})
 	}
-	var newStudent Student
+	var newStudent storage.Student
 	if err := c.BindJSON(&newStudent); err != nil {
 		fmt.Printf("failed to bind student: %s\n", err.Error())
 		c.JSON(http.StatusBadRequest, ErrorResponse{
@@ -105,16 +116,22 @@ func (h *Handler) UpdateStudent(c *gin.Context) {
 	if newStudent.Name != "" {
 		student.Name = newStudent.Name
 	}
-	if student.Age != 0 {
+	if newStudent.Age != 0 {
 		student.Age = newStudent.Age
 	}
-	if student.Sex == "Man" || student.Sex == "Woman" {
+	if newStudent.Sex == "Man" || newStudent.Sex == "Woman" {
 		student.Sex = newStudent.Sex
 	}
-	if student.Course > 1 && student.Course < 6 {
+	if newStudent.Course > 1 && newStudent.Course < 6 {
+		fmt.Println()
 		student.Course = newStudent.Course
 	}
-	h.storage.Update(id, &student)
+	err = h.storage.Update(&student)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, ErrorResponse{
+			Message: err.Error(),
+		})
+	}
 	c.JSON(http.StatusOK, student)
 }
 
@@ -125,6 +142,11 @@ func (h *Handler) DeleteStudent(c *gin.Context) {
 			Message: err.Error(),
 		})
 	}
-	h.storage.Delete(id)
-	c.JSON(http.StatusOK, nil)
+	err = h.storage.Delete(id)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, ErrorResponse{
+			Message: err.Error(),
+		})
+	}
+	c.JSON(http.StatusOK, map[int]string{})
 }
