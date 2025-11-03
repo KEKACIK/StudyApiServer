@@ -1,7 +1,6 @@
 package storage
 
 import (
-	"fmt"
 	"sync"
 
 	"gorm.io/driver/sqlite"
@@ -64,8 +63,4 @@ func (st *SQLiteStorage) Delete(id int) error {
 	st.DB.Delete(&student)
 	st.Unlock()
 	return nil
-}
-
-func (st *SQLiteStorage) Print() {
-	fmt.Println(nil)
 }

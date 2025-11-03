@@ -17,5 +17,4 @@ type Storage interface {
 	GetAll() ([]Student, error)
 	Update(s *Student) error
 	Delete(id int) error
-	Print()
 }
