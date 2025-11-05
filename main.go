@@ -11,9 +11,10 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	handler := NewHandler(sqliteStorage)
 
+	handler := NewHandler(sqliteStorage)
 	router := gin.Default()
+
 	router.POST("/student", handler.CreateStudent)
 	router.GET("/student/:id", handler.GetStudent)
 	router.GET("/student/list", handler.GetAllStudent)

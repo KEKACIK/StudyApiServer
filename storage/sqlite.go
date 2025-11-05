@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"fmt"
 	"sync"
 
 	"gorm.io/driver/sqlite"
@@ -38,6 +39,9 @@ func (st *SQLiteStorage) Get(id int) (Student, error) {
 	st.Lock()
 	st.DB.First(&student, id)
 	st.Unlock()
+	if (student == Student{}) {
+		return student, fmt.Errorf("database request error: Student with id=%d not found", id)
+	}
 	return student, nil
 }
 
