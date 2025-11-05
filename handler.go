@@ -98,12 +98,14 @@ func (h *Handler) UpdateStudent(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, ErrorResponse{
 			Message: err.Error(),
 		})
+		return
 	}
 	student, err := h.storage.Get(id)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, ErrorResponse{
 			Message: err.Error(),
 		})
+		return
 	}
 	var newStudent storage.Student
 	if err := c.BindJSON(&newStudent); err != nil {

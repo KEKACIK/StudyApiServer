@@ -40,7 +40,7 @@ func (st *SQLiteStorage) Get(id int) (Student, error) {
 	st.DB.First(&student, id)
 	st.Unlock()
 	if (student == Student{}) {
-		return student, fmt.Errorf("database request error: Student with id=%d not found", id)
+		return student, fmt.Errorf("Student with id=%d not found", id)
 	}
 	return student, nil
 }
