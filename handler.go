@@ -9,6 +9,11 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+const (
+	StudyStudentSexMan   = "man"
+	StudyStudentSexWoman = "woman"
+)
+
 type ErrorResponse struct {
 	Message string `json:"message"`
 }
@@ -42,9 +47,9 @@ func (h *Handler) CreateStudent(c *gin.Context) {
 		})
 		return
 	}
-	if student.Sex != "Man" && student.Sex != "Woman" {
+	if student.Sex != StudyStudentSexMan && student.Sex != StudyStudentSexWoman {
 		c.JSON(http.StatusBadRequest, ErrorResponse{
-			Message: "student 'sex' should be 'Man' or 'Woman'",
+			Message: fmt.Sprintf("student 'sex' should be '%s' or '%s'", StudyStudentSexMan, StudyStudentSexWoman),
 		})
 		return
 	}
@@ -121,7 +126,7 @@ func (h *Handler) UpdateStudent(c *gin.Context) {
 	if newStudent.Age != 0 {
 		student.Age = newStudent.Age
 	}
-	if newStudent.Sex == "Man" || newStudent.Sex == "Woman" {
+	if newStudent.Sex == StudyStudentSexMan || newStudent.Sex == StudyStudentSexWoman {
 		student.Sex = newStudent.Sex
 	}
 	if newStudent.Course > 1 && newStudent.Course < 6 {
