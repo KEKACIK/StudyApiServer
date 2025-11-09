@@ -129,7 +129,7 @@ func (h *Handler) UpdateStudent(c *gin.Context) {
 	if newStudent.Sex == StudyStudentSexMan || newStudent.Sex == StudyStudentSexWoman {
 		student.Sex = newStudent.Sex
 	}
-	if newStudent.Course > 1 && newStudent.Course < 6 {
+	if newStudent.Course >= 1 && newStudent.Course <= 6 {
 		fmt.Println()
 		student.Course = newStudent.Course
 	}
