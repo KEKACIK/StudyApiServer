@@ -1,7 +1,7 @@
-package main
+package router
 
 import (
-	"StudyApiServer/storage"
+	"StudyApiServer/internal/repository"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -14,20 +14,50 @@ const (
 	StudyStudentSexWoman = "woman"
 )
 
+type Router struct {
+	gin.Engine
+	storage Storage
+	token   string
+}
+
+type Storage interface {
+	Insert(s *repository.Student) error
+	Get(id int) (repository.Student, error)
+	GetAll() ([]repository.Student, error)
+	Update(s *repository.Student) error
+	Delete(id int) error
+}
+
 type ErrorResponse struct {
 	Message string `json:"message"`
 }
 
-type Handler struct {
-	storage storage.Storage
+func NewRouter(storage Storage, apiToken string) *Router {
+	r := Router{
+		*gin.Default(),
+		storage,
+		apiToken,
+	}
+
+	r.init()
+
+	return &r
 }
 
-func NewHandler(storage storage.Storage) *Handler {
-	return &Handler{storage}
+func (r *Router) init() {
+	r.POST("/student", r.CreateStudent)
+	r.GET("/student/:id", r.GetStudent)
+	r.GET("/student/list", r.GetAllStudent)
+	r.PUT("/student/:id", r.UpdateStudent)
+	r.DELETE("/student/:id", r.DeleteStudent)
 }
 
-func (h *Handler) CreateStudent(c *gin.Context) {
-	var student storage.Student
+func (r *Router) Start() {
+	r.Run(":80")
+}
+
+func (r *Router) CreateStudent(c *gin.Context) {
+	var student repository.Student
 	if err := c.BindJSON(&student); err != nil {
 		fmt.Printf("failed to bind student: %s\n", err.Error())
 		c.JSON(http.StatusBadRequest, ErrorResponse{
@@ -60,7 +90,7 @@ func (h *Handler) CreateStudent(c *gin.Context) {
 		return
 	}
 
-	err := h.storage.Insert(&student)
+	err := r.storage.Insert(&student)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, ErrorResponse{
 			Message: err.Error(),
@@ -71,14 +101,14 @@ func (h *Handler) CreateStudent(c *gin.Context) {
 	})
 }
 
-func (h *Handler) GetStudent(c *gin.Context) {
+func (r *Router) GetStudent(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, ErrorResponse{
 			Message: err.Error(),
 		})
 	}
-	student, err := h.storage.Get(id)
+	student, err := r.storage.Get(id)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, ErrorResponse{
 			Message: err.Error(),
@@ -87,8 +117,8 @@ func (h *Handler) GetStudent(c *gin.Context) {
 	c.JSON(http.StatusOK, student)
 }
 
-func (h *Handler) GetAllStudent(c *gin.Context) {
-	studentList, err := h.storage.GetAll()
+func (r *Router) GetAllStudent(c *gin.Context) {
+	studentList, err := r.storage.GetAll()
 	if err != nil {
 		c.JSON(http.StatusBadRequest, ErrorResponse{
 			Message: err.Error(),
@@ -97,7 +127,7 @@ func (h *Handler) GetAllStudent(c *gin.Context) {
 	c.JSON(http.StatusOK, studentList)
 }
 
-func (h *Handler) UpdateStudent(c *gin.Context) {
+func (r *Router) UpdateStudent(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, ErrorResponse{
@@ -105,14 +135,14 @@ func (h *Handler) UpdateStudent(c *gin.Context) {
 		})
 		return
 	}
-	student, err := h.storage.Get(id)
+	student, err := r.storage.Get(id)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, ErrorResponse{
 			Message: err.Error(),
 		})
 		return
 	}
-	var newStudent storage.Student
+	var newStudent repository.Student
 	if err := c.BindJSON(&newStudent); err != nil {
 		fmt.Printf("failed to bind student: %s\n", err.Error())
 		c.JSON(http.StatusBadRequest, ErrorResponse{
@@ -133,7 +163,7 @@ func (h *Handler) UpdateStudent(c *gin.Context) {
 		fmt.Println()
 		student.Course = newStudent.Course
 	}
-	err = h.storage.Update(&student)
+	err = r.storage.Update(&student)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, ErrorResponse{
 			Message: err.Error(),
@@ -142,14 +172,14 @@ func (h *Handler) UpdateStudent(c *gin.Context) {
 	c.JSON(http.StatusOK, student)
 }
 
-func (h *Handler) DeleteStudent(c *gin.Context) {
+func (r *Router) DeleteStudent(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
 		c.JSON(http.StatusBadRequest, ErrorResponse{
 			Message: err.Error(),
 		})
 	}
-	err = h.storage.Delete(id)
+	err = r.storage.Delete(id)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, ErrorResponse{
 			Message: err.Error(),

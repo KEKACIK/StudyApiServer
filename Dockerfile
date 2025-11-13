@@ -8,4 +8,4 @@ RUN go mod download
 
 EXPOSE 80
 
-CMD ["go", "run", "."]
+CMD ["go", "run", "cmd/main.go"]

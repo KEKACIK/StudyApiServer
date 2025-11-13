@@ -1,4 +1,4 @@
-package storage
+package repository
 
 import (
 	"fmt"
@@ -14,7 +14,7 @@ type SQLiteStorage struct {
 }
 
 func NewSQLiteStorage(databasePath string) (*SQLiteStorage, error) {
-	DB, err := gorm.Open(sqlite.Open("database.db"), &gorm.Config{})
+	DB, err := gorm.Open(sqlite.Open("assets/database.db"), &gorm.Config{})
 	if err != nil {
 		return nil, err
 	}
