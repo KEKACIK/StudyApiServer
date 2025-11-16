@@ -15,7 +15,7 @@ const (
 )
 
 type Router struct {
-	gin.Engine
+	*gin.Engine
 	storage Storage
 	token   string
 }
@@ -34,7 +34,7 @@ type ErrorResponse struct {
 
 func NewRouter(storage Storage, apiToken string) *Router {
 	r := Router{
-		*gin.Default(),
+		gin.Default(),
 		storage,
 		apiToken,
 	}
@@ -45,11 +45,11 @@ func NewRouter(storage Storage, apiToken string) *Router {
 }
 
 func (r *Router) init() {
-	r.POST("/student", r.CreateStudent)
-	r.GET("/student/:id", r.GetStudent)
-	r.GET("/student/list", r.GetAllStudent)
-	r.PUT("/student/:id", r.UpdateStudent)
-	r.DELETE("/student/:id", r.DeleteStudent)
+	r.POST("/student", r.AuthMiddleware, r.CreateStudent)
+	r.GET("/student/:id", r.AuthMiddleware, r.GetStudent)
+	r.GET("/student/list", r.AuthMiddleware, r.GetAllStudent)
+	r.PUT("/student/:id", r.AuthMiddleware, r.UpdateStudent)
+	r.DELETE("/student/:id", r.AuthMiddleware, r.DeleteStudent)
 }
 
 func (r *Router) Start() {
@@ -60,31 +60,32 @@ func (r *Router) CreateStudent(c *gin.Context) {
 	var student repository.Student
 	if err := c.BindJSON(&student); err != nil {
 		fmt.Printf("failed to bind student: %s\n", err.Error())
-		c.JSON(http.StatusBadRequest, ErrorResponse{
+		c.AbortWithStatusJSON(http.StatusBadRequest, ErrorResponse{
 			Message: err.Error(),
 		})
 		return
+
 	}
 	if student.Name == "" {
-		c.JSON(http.StatusBadRequest, ErrorResponse{
+		c.AbortWithStatusJSON(http.StatusBadRequest, ErrorResponse{
 			Message: "student 'name' is empty",
 		})
 		return
 	}
 	if student.Age == 0 {
-		c.JSON(http.StatusBadRequest, ErrorResponse{
+		c.AbortWithStatusJSON(http.StatusBadRequest, ErrorResponse{
 			Message: "student 'age' is empty",
 		})
 		return
 	}
 	if student.Sex != StudyStudentSexMan && student.Sex != StudyStudentSexWoman {
-		c.JSON(http.StatusBadRequest, ErrorResponse{
+		c.AbortWithStatusJSON(http.StatusBadRequest, ErrorResponse{
 			Message: fmt.Sprintf("student 'sex' should be '%s' or '%s'", StudyStudentSexMan, StudyStudentSexWoman),
 		})
 		return
 	}
 	if student.Course < 1 || student.Course > 6 {
-		c.JSON(http.StatusBadRequest, ErrorResponse{
+		c.AbortWithStatusJSON(http.StatusBadRequest, ErrorResponse{
 			Message: "student 'course' should be between 1 and 6",
 		})
 		return
@@ -92,10 +93,11 @@ func (r *Router) CreateStudent(c *gin.Context) {
 
 	err := r.storage.Insert(&student)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, ErrorResponse{
+		c.AbortWithStatusJSON(http.StatusBadRequest, ErrorResponse{
 			Message: err.Error(),
 		})
 	}
+
 	c.JSON(http.StatusOK, map[string]interface{}{
 		"id": student.ID,
 	})
@@ -104,52 +106,58 @@ func (r *Router) CreateStudent(c *gin.Context) {
 func (r *Router) GetStudent(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		c.JSON(http.StatusBadRequest, ErrorResponse{
+		c.AbortWithStatusJSON(http.StatusBadRequest, ErrorResponse{
 			Message: err.Error(),
 		})
 	}
+
 	student, err := r.storage.Get(id)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, ErrorResponse{
+		c.AbortWithStatusJSON(http.StatusBadRequest, ErrorResponse{
 			Message: err.Error(),
 		})
 	}
+
 	c.JSON(http.StatusOK, student)
 }
 
 func (r *Router) GetAllStudent(c *gin.Context) {
 	studentList, err := r.storage.GetAll()
 	if err != nil {
-		c.JSON(http.StatusBadRequest, ErrorResponse{
+		c.AbortWithStatusJSON(http.StatusBadRequest, ErrorResponse{
 			Message: err.Error(),
 		})
 	}
+
 	c.JSON(http.StatusOK, studentList)
 }
 
 func (r *Router) UpdateStudent(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		c.JSON(http.StatusBadRequest, ErrorResponse{
+		c.AbortWithStatusJSON(http.StatusBadRequest, ErrorResponse{
 			Message: err.Error(),
 		})
 		return
 	}
 	student, err := r.storage.Get(id)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, ErrorResponse{
+		c.AbortWithStatusJSON(http.StatusBadRequest, ErrorResponse{
 			Message: err.Error(),
 		})
 		return
 	}
+
 	var newStudent repository.Student
-	if err := c.BindJSON(&newStudent); err != nil {
+	err = c.BindJSON(&newStudent)
+	if err != nil {
 		fmt.Printf("failed to bind student: %s\n", err.Error())
-		c.JSON(http.StatusBadRequest, ErrorResponse{
+		c.AbortWithStatusJSON(http.StatusBadRequest, ErrorResponse{
 			Message: err.Error(),
 		})
 		return
 	}
+
 	if newStudent.Name != "" {
 		student.Name = newStudent.Name
 	}
@@ -160,12 +168,12 @@ func (r *Router) UpdateStudent(c *gin.Context) {
 		student.Sex = newStudent.Sex
 	}
 	if newStudent.Course >= 1 && newStudent.Course <= 6 {
-		fmt.Println()
 		student.Course = newStudent.Course
 	}
+
 	err = r.storage.Update(&student)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, ErrorResponse{
+		c.AbortWithStatusJSON(http.StatusBadRequest, ErrorResponse{
 			Message: err.Error(),
 		})
 	}
@@ -175,15 +183,17 @@ func (r *Router) UpdateStudent(c *gin.Context) {
 func (r *Router) DeleteStudent(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
-		c.JSON(http.StatusBadRequest, ErrorResponse{
+		c.AbortWithStatusJSON(http.StatusBadRequest, ErrorResponse{
 			Message: err.Error(),
 		})
 	}
+
 	err = r.storage.Delete(id)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, ErrorResponse{
+		c.AbortWithStatusJSON(http.StatusBadRequest, ErrorResponse{
 			Message: err.Error(),
 		})
 	}
+
 	c.JSON(http.StatusOK, map[int]string{})
 }
