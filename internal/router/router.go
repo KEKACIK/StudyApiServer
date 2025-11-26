@@ -1,17 +1,14 @@
 package router
 
 import (
+	"StudyApiServer/config"
 	"StudyApiServer/internal/repository"
+	"StudyApiServer/internal/validation"
 	"fmt"
 	"net/http"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
-)
-
-const (
-	StudyStudentSexMan   = "man"
-	StudyStudentSexWoman = "woman"
 )
 
 type Router struct {
@@ -64,29 +61,29 @@ func (r *Router) CreateStudent(c *gin.Context) {
 			Message: err.Error(),
 		})
 		return
+	}
 
-	}
-	if student.Name == "" {
+	if err := validation.NameValidation(student.Name); err != nil {
 		c.AbortWithStatusJSON(http.StatusBadRequest, ErrorResponse{
-			Message: "student 'name' is empty",
+			Message: err.Error(),
 		})
 		return
 	}
-	if student.Age == 0 {
+	if err := validation.AgeValidation(student.Age); err != nil {
 		c.AbortWithStatusJSON(http.StatusBadRequest, ErrorResponse{
-			Message: "student 'age' is empty",
+			Message: err.Error(),
 		})
 		return
 	}
-	if student.Sex != StudyStudentSexMan && student.Sex != StudyStudentSexWoman {
+	if err := validation.SexValidation(student.Sex); err != nil {
 		c.AbortWithStatusJSON(http.StatusBadRequest, ErrorResponse{
-			Message: fmt.Sprintf("student 'sex' should be '%s' or '%s'", StudyStudentSexMan, StudyStudentSexWoman),
+			Message: err.Error(),
 		})
 		return
 	}
-	if student.Course < 1 || student.Course > 6 {
+	if err := validation.CourseValidation(student.Course); err != nil {
 		c.AbortWithStatusJSON(http.StatusBadRequest, ErrorResponse{
-			Message: "student 'course' should be between 1 and 6",
+			Message: err.Error(),
 		})
 		return
 	}
@@ -164,7 +161,7 @@ func (r *Router) UpdateStudent(c *gin.Context) {
 	if newStudent.Age != 0 {
 		student.Age = newStudent.Age
 	}
-	if newStudent.Sex == StudyStudentSexMan || newStudent.Sex == StudyStudentSexWoman {
+	if newStudent.Sex == config.StudyStudentSexMan || newStudent.Sex == config.StudyStudentSexWoman {
 		student.Sex = newStudent.Sex
 	}
 	if newStudent.Course >= 1 && newStudent.Course <= 6 {
