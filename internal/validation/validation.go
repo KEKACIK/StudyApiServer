@@ -5,7 +5,9 @@ import (
 	"errors"
 )
 
-var ErrValidationNameEmpty = errors.New("invalid name: empty")
+var (
+	ErrValidationNameEmpty = errors.New("invalid name: empty")
+)
 
 func NameValidation(name string) error {
 	if name == "" {
@@ -15,8 +17,10 @@ func NameValidation(name string) error {
 	return nil
 }
 
-var ErrValidationAgeTooSmall = errors.New("invalid age: too small")
-var ErrValidationAgeTooBig = errors.New("invalid age: too big")
+var (
+	ErrValidationAgeTooSmall = errors.New("invalid age: too small")
+	ErrValidationAgeTooBig   = errors.New("invalid age: too big")
+)
 
 func AgeValidation(age int) error {
 	if age < config.StudyStudentMinAge {
@@ -29,7 +33,9 @@ func AgeValidation(age int) error {
 	return nil
 }
 
-var ErrValidationSexInvalid = errors.New("invalid sex")
+var (
+	ErrValidationSexInvalid = errors.New("invalid sex")
+)
 
 func SexValidation(sex string) error {
 	sexList := [2]string{
@@ -51,8 +57,10 @@ func SexValidation(sex string) error {
 	return nil
 }
 
-var ErrValidationCourseTooSmall = errors.New("invalid course: too small")
-var ErrValidationCourseTooBig = errors.New("invalid course: too big")
+var (
+	ErrValidationCourseTooSmall = errors.New("invalid course: too small")
+	ErrValidationCourseTooBig   = errors.New("invalid course: too big")
+)
 
 func CourseValidation(course int) error {
 	if course < config.StudyStudentMinCourse {

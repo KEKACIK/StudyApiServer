@@ -1,7 +1,6 @@
 package router
 
 import (
-	"StudyApiServer/config"
 	"StudyApiServer/internal/repository"
 	"StudyApiServer/internal/validation"
 	"fmt"
@@ -53,6 +52,8 @@ func (r *Router) Start() {
 	r.Run(":80")
 }
 
+// CREATE
+
 func (r *Router) CreateStudent(c *gin.Context) {
 	var student repository.Student
 	if err := c.BindJSON(&student); err != nil {
@@ -100,6 +101,8 @@ func (r *Router) CreateStudent(c *gin.Context) {
 	})
 }
 
+// GET
+
 func (r *Router) GetStudent(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
@@ -129,6 +132,8 @@ func (r *Router) GetAllStudent(c *gin.Context) {
 	c.JSON(http.StatusOK, studentList)
 }
 
+// UPDATE
+
 func (r *Router) UpdateStudent(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
@@ -155,16 +160,16 @@ func (r *Router) UpdateStudent(c *gin.Context) {
 		return
 	}
 
-	if newStudent.Name != "" {
+	if err = validation.NameValidation(newStudent.Name); err == nil {
 		student.Name = newStudent.Name
 	}
-	if newStudent.Age != 0 {
+	if err := validation.AgeValidation(newStudent.Age); err == nil {
 		student.Age = newStudent.Age
 	}
-	if newStudent.Sex == config.StudyStudentSexMan || newStudent.Sex == config.StudyStudentSexWoman {
+	if err := validation.SexValidation(newStudent.Sex); err == nil {
 		student.Sex = newStudent.Sex
 	}
-	if newStudent.Course >= 1 && newStudent.Course <= 6 {
+	if err := validation.CourseValidation(newStudent.Course); err == nil {
 		student.Course = newStudent.Course
 	}
 
@@ -176,6 +181,8 @@ func (r *Router) UpdateStudent(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, student)
 }
+
+// DELETE
 
 func (r *Router) DeleteStudent(c *gin.Context) {
 	id, err := strconv.Atoi(c.Param("id"))
